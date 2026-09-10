@@ -8,6 +8,10 @@
         "**/thesis.aux": true,
         "**/thesis.log": true,
         "**/thesis.gz": true,
-        "**/thesis.out": true
+        "**/thesis.out": true,
+        "**/thesis_PALAJ.aux": true,
+        "**/thesis_PALAJ.log": true,
+        "**/thesis_PALAJ.gz": true,
+        "**/thesis_PALAJ.out": true
     }
 }
