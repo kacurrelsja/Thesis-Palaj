@@ -1,7 +1,6 @@
 %% Le lingue utilizzate, che verranno passate come opzioni al pacchetto babel.
 \def\thudbabelopt{italian,english}
-\documentclass[target=mst,style=]{thud}
-
+\documentclass[target=mst,aauheader=aics,style=]{thud}
 %% --- Informazioni sulla tesi ---
 \course{Cybersecurity and Artificial Intelligence}
 \title{Neuro-Symbolic Attack Graph Synthesis: Out-of-Band Threat Modeling for Operational Technology Configurations}
@@ -218,7 +217,7 @@ In OT environments, availability, reliability, and safety often receive greater 
 
 \section{The Evolving Threat Landscape and Operational Urgency in OT}
 \label{sec:ot_urgency}
-In recent years, the frequency of security advisories and reported vulnerabilities targeting Operational Technology has expanded significantly, reflecting a substantial shift in the adversarial landscape~\cite{MITRE_ICS_2024}. While early industrial security incidents were often regarded as rare, highly specialized operations conducted exclusively by advanced nation-state actors, such as the seminal Stuxnet worm~\cite{langner2011stuxnet}, the 2015/2016 Ukrainian power grid disruptions via Industroyer~\cite{case2016ukraine}, and the targeted safety instrumented system malware TRITON/HatMan~\cite{johnson2017triton}, contemporary industrial environments confront a much broader and more commoditized spectrum of risk. Industrial cybersecurity monitoring entities, emergency readiness teams such as CISA, and major automation vendors regularly disclose weaknesses across the industrial stack, ranging from supervisory software suites and engineering workstations down to embedded controller firmware and communication stacks~\cite{mitre_ics}. While early industrial security incidents were often regarded as rare, highly specialized operations conducted exclusively by advanced nation-state actors~\cite{langner2011stuxnet, case2016ukraine}, contemporary industrial environments confront a much broader and more commoditized spectrum of risk.
+In recent years, the frequency of security advisories and reported vulnerabilities targeting Operational Technology has expanded significantly, reflecting a substantial shift in the adversarial landscape~\cite{MITRE_ICS_2024}. While early industrial security incidents were often regarded as rare, highly specialized operations conducted exclusively by advanced nation-state actors, such as the seminal Stuxnet worm~\cite{langner2011stuxnet}, the 2015/2016 Ukrainian power grid disruptions via Industroyer~\cite{case2016ukraine}, and the targeted safety instrumented system malware TRITON/HatMan~\cite{johnson2017triton}, contemporary industrial environments confront a much broader and more commoditized spectrum of risk. Industrial cybersecurity monitoring entities, emergency readiness teams such as CISA, and major automation vendors regularly disclose weaknesses across the industrial stack, ranging from supervisory software suites and engineering workstations down to embedded controller firmware and communication stacks~\cite{mitre_ics}. 
 
 Targeted industrial ransomware has emerged as a prominent manifestation of this development, where adversaries no longer confine their campaigns to corporate business tiers but deliberately seek out operational jump hosts, supervisory storage repositories, and central backup systems to halt physical production lines and maximize extortion leverage~\cite{SunderOT}. In parallel, common border infrastructure and administrative conduits, such as remote desktop gateways, VPN endpoints, and remote procedure call services operating within the industrial DMZ, are regularly targeted by newly cataloged remote code execution flaws, providing adversaries with straightforward footholds into the automation perimeter~\cite{Ou05, TayouriSurvey}. 
 
@@ -275,7 +274,7 @@ Building upon these foundations, Chapter~\ref{chap:analysis} (\textit{Analysis \
 
 Chapter~\ref{chap:architecture} (\textit{System Architecture \& Methodology}) details the formal attacker model and outlines the theoretical five-step pipeline designed to overcome these challenges, justifying the integration of targeted payload slicing, Answer Set Programming, and tabled Datalog resolution over unconstrained neural approaches.
 
-Chapter~\ref{chap:implementation} (\textit{Design and Implementation of the Neuro-Symbolic Threat Pipeline}) describes the technical engineering of the framework. It details the operational mechanics of System-1 prompt orchestration, the deterministic sanitization filters, the declarative Clingo completion engine (System-2A), and the extended Purdue domain ruleset (\texttt{attack1.P}) executed in MulVAL (System-2B).
+Chapter~\ref{chap:implementation} (\textit{Design and Implementation of the Neuro-Symbolic Threat Pipeline}) describes the technical engineering of the framework. It details the operational mechanics of System-1 prompt orchestration, the deterministic sanitization filters, the declarative Clingo completion engine, and the extended Purdue domain ruleset executed in MulVAL.
 
 The empirical validation of the pipeline is presented in Chapter~\ref{chap:evaluation} (\textit{Experimental Evaluation and Attack Graph Analysis}). Here, the system is benchmarked across eight operational attack scenarios on the Danieli topology, validating derivation latency, polynomial scalability, and counterfactual mitigation collapse when defensive hardening is applied.
 
@@ -306,7 +305,7 @@ In enterprise IT systems, cybersecurity architectures are governed by the classi
 
 Within operational technology, this priority hierarchy undergoes an inversion, prioritizing availability, deterministic timing, and physical safety over confidentiality~\cite{SunderOT}. 
 
-OT encompasses supervisory architectures and distributed embedded controllers governing real-world physical dynamics: chemical reactions, high-voltage power routing, and automated steel manufacturing lines~\cite{StanExtended}. Unlike enterprise servers, embedded Level~1 programmable logic controllers (PLCs), remote terminal units (RTUs), and Level~0 variable frequency drives feature single-threaded microcontrollers, fixed cyclic execution loops, and constrained network buffers.
+OT encompasses supervisory architectures and distributed embedded controllers governing real-world physical dynamics: chemical reactions, high-voltage power routing, and automated steel manufacturing lines~\cite{StanExtended}. Unlike enterprise servers, embedded programmable logic controllers (PLCs), remote terminal units (RTUs), and variable frequency drives feature single-threaded microcontrollers, fixed cyclic execution loops, and constrained network buffers.
 
 Subjecting these embedded industrial devices to active IT scanning methodologies precipitates severe physical risks. The high connection volume and packet frequencies generated by standard vulnerability scanners can exhaust controller communication buffers, forcing PLCs into non-recoverable hardware fault states, disrupting millisecond-level scan cycles, or blinding human-machine interfaces (HMIs). Because unexpected downtime in capital-intensive manufacturing plants incurs severe financial loss and physical safety hazards, active scanning and intrusive penetration testing are strictly excluded from operational networks~\cite{TayouriSurvey}. Security evaluation in OT must therefore be conducted entirely out-of-band through formal, declarative modeling over static configuration manifests and asset inventories~\cite{Ou05, TayouriMIRAGE, alviano2025llmasp}.
 
@@ -352,8 +351,8 @@ Automating security analysis over multi-tiered networks requires formal represen
 In comprehensive methodological surveys of attack graph formalisms, security researchers categorize automated attack modeling frameworks into three primary generation paradigms~\cite{KonstaSurvey, WachterSurvey}:
 
 \begin{itemize}
-    \item \textbf{Pure Graph-Theoretic Architectures:} These systems construct explicit directed graphs to map paths, relying on classical graph traversal algorithms (e.g., Dijkstra, Breadth-First Search) to evaluate reachability. While conceptually intuitive and effective for small networks, they remain constrained by state-space explosion when applied to complex topologies.
-    \item \textbf{Model-Checking Frameworks:} Leveraging formal verification engines such as NuSMV or SPIN, these approaches model network components as strict finite state machines and use temporal logic formulas (e.g., LTL or CTL) to verify safety properties. While mathematically rigorous and capable of expressing non-monotonic state revocations, they demand substantial memory and computational time in large infrastructures.
+    \item \textbf{Pure Graph-Theoretic Architectures:} These systems construct explicit directed graphs to map paths, relying on classical graph traversal algorithms (e.g., Dijkstra, Breadth-First Search)\cite{KonstaSurvey} to evaluate reachability. While conceptually intuitive and effective for small networks, they remain constrained by state-space explosion when applied to complex topologies.
+    \item \textbf{Model-Checking Frameworks:} Leveraging formal verification engines such as NuSMV\cite{cimatti2002nusmv} or SPIN \cite{holzmann1997model}, these approaches model network components as strict finite state machines and use temporal logic formulas (e.g., LTL or CTL) to verify safety properties. While mathematically rigorous and capable of expressing non-monotonic state revocations, they demand substantial memory and computational time in large infrastructures.
     \item \textbf{Rule-Based Declarative Logic Engines:} Frameworks such as MulVAL leverage Horn-clause logic programming and backward-chaining engines to evaluate security risks~\cite{Ou05}. This architecture provides scalability and expressiveness by abstracting network configurations into static relational facts and generic interaction rules, natively maintaining a monotonic view of the environment.
 \end{itemize}
 
@@ -392,7 +391,7 @@ where the head $H$ is derived as a logical consequence if all body subgoals $B_1
 
 \paragraph{Monotonicity Guarantees.} This paradigm shift relies fundamentally on the principle of \textit{monotonicity}~\cite{Ou05}. In a monotonic logic framework, it is assumed that an adversary's acquired privileges and network reachability accumulate over time and are never revoked during the evaluated attack sequence. If an attacker acquires administrative control over a jump server, that privilege remains a true logical fact throughout the duration of the multi-stage evaluation.
 
-Importantly, this monotonicity guarantee applies to MulVAL's core interaction rules and our extended industrial rules, which utilize positive Datalog: facts, rule heads, and rule bodies contain exclusively positive atoms. For a fixed rule set, adding facts therefore strictly preserves previously derived conclusions. While the underlying XSB Prolog engine supports negation as failure, which can introduce non-monotonic behaviors, restricting domain rules to positive Horn clauses guarantees monotonic derivation. Consequently, the computational complexity of attack path synthesis is drastically reduced from exponential time to polynomial time $O(N^2)$, where $N$ represents the total volume of ground configuration facts, reachability predicates, and vulnerability assertions in the knowledge base~\cite{Ou05}.
+Importantly, this monotonicity guarantee applies to MulVAL's core interaction rules and our extended industrial rules, which utilize positive Datalog facts, rule heads, and rule bodies contain exclusively positive atoms. For a fixed rule set, adding facts therefore strictly preserves previously derived conclusions. While the underlying XSB Prolog engine supports negation as failure, which can introduce non-monotonic behaviors, restricting domain rules to positive Horn clauses guarantees monotonic derivation. Consequently, the computational complexity of attack path synthesis is drastically reduced from exponential time to polynomial time $O(N^2)$, where $N$ represents the total volume of ground configuration facts, reachability predicates, and vulnerability assertions in the knowledge base~\cite{Ou05}.
 
 \subsection{Path Discovery and Optimization}
 \label{sec:path_discovery_opt}
@@ -543,7 +542,7 @@ Before formal reasoning can proceed, the system properties, installed software c
 \label{sec:sboms_vs_manifests}
 In modern industrial cybersecurity engineering, tracking deployed software components across heterogeneous devices increasingly involves standardized Software Bill of Materials (SBOM) specifications~\cite{cyclonedx, spdx}. Frameworks such as CycloneDX (OWASP) and SPDX (ISO/IEC 5962) structure package identifiers, component hierarchies, and cryptographic hashes into machine-readable JSON or XML schemas.
 
-While SBOM standards are essential for tracking third-party component supply chains, operational plant auditing requires macroscopic asset and network manifests that capture holistic site architectures. A component-level SBOM lists firmware packages, but typically omits inter-zone firewall access control lists (\texttt{aclNW/4}), shared administrative password hashes (\texttt{sameCredentials/2}), and unauthenticated fieldbus adjacencies (\texttt{l2Connection/5}). Consequently, this research does not ingest micro-level CycloneDX or SPDX feeds directly; instead, it targets the plant-wide engineering configuration artifact (\texttt{configuration.json}) provided by Danieli Automation, which functions as an architectural surrogate integrating host parameters, network routing matrices, and vulnerability annotations.
+While SBOM standards are essential for tracking third-party component supply chains, operational plant auditing requires macroscopic asset and network manifests that capture holistic site architectures. A component-level SBOM lists firmware packages, but typically omits inter-zone firewall access control lists (\texttt{aclNW/4}), shared administrative password hashes (\texttt{sameCredentials/2}), and unauthenticated fieldbus adjacencies (\texttt{l2Connection/5}). Consequently, this research does not ingest micro-level CycloneDX or SPDX feeds directly; instead, it targets the plant-wide engineering configuration artifact provided by Danieli Automation, which functions as an architectural surrogate integrating host parameters, network routing matrices, and vulnerability annotations.
 
 \subsection{MITRE ATT\&CK for ICS}
 \label{subsec:mitre_ics}
@@ -599,7 +598,7 @@ By restricting the LLM to syntactic translation and offloading all logical deduc
 \section{Industrial Problem Context: The Danieli Automation Plant Model}
 To evaluate non-intrusive threat modeling under operational constraints, this thesis examines a realistic industrial plant architecture provided during an engineering internship at Danieli Automation. As an operational steel manufacturing automation environment, the system is partitioned according to the ANSI/ISA-95 Purdue Reference Model, spanning supervisory management down to physical field actuation.
 
-Because active port sweeps and service probing carry acute risks of buffer exhaustion and hardware shutdown on industrial controllers, the plant configuration must be assessed entirely through static engineering artifacts. Specifically, the network inventory and security policies are documented within a central, semi-structured configuration manifest (\texttt{configuration.json}). 
+Because active port sweeps and service probing carry acute risks of buffer exhaustion and hardware shutdown on industrial controllers, the plant configuration must be assessed entirely through static engineering artifacts. Specifically, the network inventory and security policies are documented within a central, semi-structured configuration manifest. 
 
 The primary objective of this chapter is to formulate the concrete representational, combinatorial, and operational problems that emerge when attempting to translate this raw industrial specification into a mathematically verifiable attack graph model, in particular, into a suitable, OT-domain-specific MulVAL interaction ruleset.
 
@@ -869,7 +868,7 @@ To resolve the structural mismatches, token limits, and cyclic recursion risks i
 
 \subsection{Step 1: Targeted Payload Slicing and Syntactic Ingestion}
 \label{subsec:step1_ingestion}
-The first phase of the pipeline ingests the semi-structured industrial configuration manifest (\texttt{configuration.json}) provided by Danieli Automation. Submitting an entire industrial manifest into a single large language model prompt often leads to token limits and attentional degradation across long contexts. Conversely, deterministic scripts break when field names or object hierarchies change across plant management tools.
+The first phase of the pipeline ingests the semi-structured industrial configuration manifest provided by Danieli Automation. Submitting an entire industrial manifest into a single large language model prompt often leads to token limits and attentional degradation across long contexts. Conversely, deterministic scripts break when field names or object hierarchies change across plant management tools.
 
 To address this challenge, our architecture adapts the neuro-symbolic division of labor from the LLMASP framework. Here, the language model is restricted strictly to an inductive syntactic parser (System-1). Rather than passing the full JSON file on every query, the pipeline controller (\texttt{run\_llmasp.py}) applies \textit{targeted payload slicing}. 
 
@@ -905,7 +904,7 @@ isSlave(D, bus_area_1) :-
     located(D, fieldbus_l0, _).
 \end{lstlisting}
 
-By executing this logic declaratively, Clingo evaluates all pairwise credential matches, classifies Domain Controllers, and formalizes unauthenticated protocol bindings in approximately $0.0060$ seconds with formal soundness. This step eliminates manual pairing overhead while preventing generative hallucinations. The resulting stable model is then combined with static axioms to materialize the closed Datalog knowledge base, saved as \texttt{environmentNetwork.P}.
+By executing this logic declaratively, Clingo evaluates all pairwise credential matches, classifies Domain Controllers, and formalizes unauthenticated protocol bindings in approximately $0.0087$ seconds with formal soundness. This step eliminates manual pairing overhead while preventing generative hallucinations. The resulting stable model is then combined with static axioms to materialize the closed Datalog knowledge base, saved as \texttt{environmentNetwork.P}.
 
 \subsection{Step 4: Monotonic Derivation with MulVAL and Tabled XSB}
 In the third phase, the materialized fact base is ingested by the MulVAL reasoning engine (System-2B), executed on an underlying XSB Prolog environment. 
@@ -980,7 +979,7 @@ The practical toolchain coordinates three distinct computational environments, t
     \item \textbf{System-1 Orchestrator (\texttt{run\_llmasp.py}):} A Python-based automation controller that interfaces with the Groq inference endpoint, ingests \texttt{configuration.json}, and enforces prompt-sliced querying according to \texttt{behavior\_ot.yaml} and \texttt{application\_ot.yaml}.
     \item \textbf{Syntactic Normalization and Sanitization Module:} Embedded within the controller, this component filters raw LLM emissions, strips markdown delimiters, standardizes variable casing, and verifies predicate arities before fact instantiation.
     \item \textbf{System-2A Deductive Engine (\texttt{clingo}):} Evaluates declarative background knowledge rules (\texttt{background\_ot.lp}) against explicit primitives to materialize implicit architectural relations into \texttt{environmentNetwork.P}.
-    \item \textbf{System-2B Causal Derivation Engine (\texttt{mulval}):} Executes goal-directed SLG resolution in XSB Prolog, applying our extended industrial ruleset (\texttt{attack1.P}) to compile \texttt{environmentNetwork.P} into directed Graphviz (\texttt{.dot}) structures and visual attack graphs (\texttt{.pdf}, \texttt{.png}).
+    \item \textbf{System-2B Causal Derivation Engine (\texttt{mulval}):} Executes goal-directed SLG resolution in XSB Prolog, applying our extended industrial ruleset (\texttt{attack1.P}) to compile \\\texttt{environmentNetwork.P} into directed Graphviz (\texttt{.dot}) structures and visual attack graphs (\texttt{.pdf}, \texttt{.png}).
 \end{itemize}
 
 \begin{figure}[htbp]
@@ -1016,19 +1015,21 @@ Table~\ref{tab:predicate_signatures} details the predicate extraction schema use
 \begin{table}[htbp]
 \centering
 \small
+% Reduce horizontal cell padding locally to recover space
+\setlength{\tabcolsep}{4pt}
 \caption{System-1 Atomic Predicate Extraction Schema Across Purdue Layers}
 \label{tab:predicate_signatures}
-\begin{tabularx}{\textwidth}{L{4.2cm}YL{3.6cm}}
+\begin{tabularx}{\textwidth}{L{4.0cm} Y >{\ttfamily\raggedright\arraybackslash}p{3.2cm}}
 \toprule
-\textbf{Predicate Signature} & \textbf{Formal Semantic Meaning} & \textbf{JSON Source Field} \\
+\textbf{Predicate Signature} & \textbf{Formal Semantic Meaning} & \textrm{\textbf{JSON Source Field}} \\
 \midrule
-\texttt{located(H, Z, ipSubnet)} & Maps host $H$ to Purdue security zone $Z$. & \texttt{hosts[].zone} \\
-\texttt{networkService(H, S, P, Port, Priv)} & Declares daemon $S$ on host $H$ on protocol $P$ and port $Port$ with privilege $Priv$. & \texttt{hosts[].software\_services} \\
-\texttt{hasAccount(H, User, PwdKey)} & Binds account $User$ and credential hash $PwdKey$ to host $H$. & \texttt{hosts[].credentials} \\
-\texttt{aclNW(Src, Dst, P, Port)} & Declares permissible firewall rule from $Src$ to $Dst$ on protocol $P$ and port $Port$. & \texttt{firewall\_rules[]} \\
-\texttt{vulHost(H, VulID, S, Range, Conseq)} & Declares vulnerability $VulID$ on daemon $S$ of host $H$ with vector $Range$ and consequence $Conseq$. & \texttt{hosts[].software\_services} \\
-\texttt{l2Connection(Src, Dst, Bus, Prot, bus)} & Models physical layer-2 fieldbus link between $Src$ and $Dst$ over bus identifier $Bus$. & \texttt{fieldbus\_connections[]} \\
-\texttt{dataFlow(Src, Dst, FlowID, Type)} & Defines telemetry stream $FlowID$ between acquisition node $Src$ and historian $Dst$. & \texttt{data\_flows[]} \\
+\texttt{located(H, Z, ipSubnet)} & Maps host $H$ to Purdue security zone $Z$. & hosts[].zone \\
+\texttt{networkService(H, S, P, Port, Priv)} & Declares daemon $S$ on host $H$ on protocol $P$ and port $Port$ with privilege $Priv$. & hosts[].\allowbreak software\_services \\
+\texttt{hasAccount(H, User, PwdKey)} & Binds account $User$ and credential hash $PwdKey$ to host $H$. & hosts[].credentials \\
+\texttt{aclNW(Src, Dst, P, Port)} & Declares permissible firewall rule from $Src$ to $Dst$ on protocol $P$ and port $Port$. & firewall\_rules[] \\
+\texttt{vulHost(H, VulID, S, Range, Conseq)} & Declares vulnerability $VulID$ on daemon $S$ of host $H$ with vector $Range$ and consequence $Conseq$. & hosts[].\allowbreak software\_services \\
+\texttt{l2Connection(Src, Dst, Bus, Prot, bus)} & Models physical layer-2 fieldbus link between $Src$ and $Dst$ over bus identifier $Bus$. & fieldbus\_\allowbreak connections[] \\
+\texttt{dataFlow(Src, Dst, FlowID, Type)} & Defines telemetry stream $FlowID$ between acquisition node $Src$ and historian $Dst$. & data\_flows[] \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -1089,7 +1090,7 @@ To mitigate prompt injection risks and maintain structural rigidity, the prompts
 Before storing the facts, the controller enforces syntactic normalization: all strings are converted to lowercase alphanumeric characters with underscores. This prevents uppercase identifiers from being misinterpreted as unbound variables in Prolog. Each atom is also checked against its expected arity and argument types; malformed entries are discarded immediately. This ensures that only well-formed explicit facts ($\mathcal{F}_{explicit}$) are passed to the symbolic reasoning stage.
 
 % ------------------------------------------------------------------------------
-\section{System-2: Declarative Symbolic Completion and Deductive Derivation}
+\section{System-2: Declarative Symbolic Completion and Deductive \\Derivation}
 \label{sec:system2_implementation}
 % ------------------------------------------------------------------------------
 
@@ -1117,7 +1118,7 @@ This declarative step serves three specific functions:
     \item Equation (5.4) identifies which hosts run Active Directory services and marks them as Domain Controllers, formalizing their role for domain-takeover rules.
     \item Equations (5.5) through (5.7) inspect active services and subnet locations to bind unauthenticated Modbus protocols to controllers and establish master-slave relationships over Layer-2 fieldbuses.
 \end{itemize}
-Clingo evaluates these rules in approximately $0.0060$ seconds, ensuring that all relational links are derived quickly and without hallucinations~\cite{clingo}. The resulting stable model is then combined with static axioms to produce the closed fact base: \texttt{environmentNetwork.P}.
+Clingo evaluates these rules in approximately $0.0087$ seconds, ensuring that all relational links are derived quickly and without hallucinations~\cite{clingo}. The resulting stable model is then combined with static axioms to produce the closed fact base: \texttt{environmentNetwork.P}.
 
 \subsection{Vulnerability Modeling Mechanics: Static 5-Tuples vs. Dynamic NVD Ingestion}
 In our framework, vulnerability data enters the pipeline as pre-classified 5-tuples:
@@ -1271,12 +1272,18 @@ However, our research focuses specifically on \textbf{network hardening in opera
 Consequently, in pre-attack OT network hardening, ground truth cannot be an empirical trace of physical destruction. Instead, evaluation is conducted relative to a \textbf{Structural Reference Artifact} and governed by \textbf{Formal Fixpoint Semantics}:
 \begin{itemize}
     \item \textbf{Fidelity Relative to the Reference Artifact:} The operational ground reference is defined by the production engineering configuration manifest (\texttt{configuration.json}) provided by Danieli Automation. A pipeline extraction is accurate relative to this reference artifact if and only if every emitted ground fact corresponds to an actual declared configuration property, without omitting declared firewall rules or inventing non-existent daemons.
-    \item \textbf{Fixpoint Computation and Stable Model Semantics:} Rather than measuring statistical probability, the validity of derived attack paths is established through fixpoint computation over finite Herbrand models. In Horn-clause Datalog, an attack goal $g$ is derived if and only if $g$ belongs to the least fixpoint of the immediate consequence operator $T_{\mathcal{R}}$ applied to the complete ground fact base:
-    \begin{equation}
-        g \in \text{lfp}(T_{\mathcal{R}})(\mathcal{F}_{\text{complete}}) = \bigcup_{k \ge 0} T_{\mathcal{R}}^k(\mathcal{F}_{\text{complete}})
-    \end{equation}
-    where $T_{\mathcal{R}}(I) = I \ cup \{ H \mid (H \leftarrow B_1, \dots, B_m) \in \text{ground}(\mathcal{R}_{OT}) \land \{B_1, \dots, B_m\} \subseteq I \}$.
-    Mathematically, this represents a fixpoint under forward-chaining application of the immediate consequence operator, which is computed efficiently in goal-directed backward-chaining via SLG resolution with tabling in XSB Prolog~\cite{swift2012xsb}. Simultaneously, System-2A computes stable models in Answer Set Programming (ASP)~\cite{clingo}. Because Systems 2A and 2B operate strictly through exact symbolic fixpoint and stable model search, every edge in the synthesized attack graph represents a verified logical entailment. The concept of an ungrounded or hallucinated attack path is mathematically impossible within this symbolic layer.
+\item \textbf{Fixpoint Computation and Stable Model Semantics:} Rather than measuring statistical probability, the validity of derived attack paths is established through fixpoint computation over finite Herbrand interpretations. In Horn-clause Datalog, an attack goal $g$ is derived if and only if $g$ belongs to the least fixpoint of the immediate consequence operator $T_{\mathcal{R}}$ applied to the complete ground fact base:
+\begin{equation}
+    g \in \text{lfp}(T_{\mathcal{R}})(\mathcal{F}_{\text{complete}}) = \bigcup_{k \ge 0} T_{\mathcal{R}}^k(\mathcal{F}_{\text{complete}})
+    \label{eq:datalog_fixpoint}
+\end{equation}
+where the single-step consequence operator $T_{\mathcal{R}}$ over an interpretation (a set of ground atoms) $I$ is formally defined as:
+\begin{equation}
+    T_{\mathcal{R}}(I) = I \cup \left\{ H \;\middle|\; (H \leftarrow B_1, \dots, B_m) \in \text{ground}(\mathcal{R}_{OT}) \land \{B_1, \dots, B_m\} \subseteq I \right\}
+\end{equation}
+Here, $\mathcal{F}_{\text{complete}}$ represents the initial, fully materialized ground fact base (\texttt{environmentNetwork.P}); $I \subseteq \mathcal{B}$ denotes an Herbrand interpretation over the Herbrand base $\mathcal{B}$; $\text{ground}(\mathcal{R}_{OT})$ is the set of all ground instances of the domain interaction rules obtained by substituting variables with constants; $H$ represents the rule head (the inferred consequence atom); and $\{B_1, \dots, B_m\}$ designates the set of body preconditions that must simultaneously hold within $I$ for $H$ to be derived. 
+
+Mathematically, this corresponds to the least fixpoint under forward-chaining application of the immediate consequence operator, which is computed efficiently in goal-directed backward-chaining via SLG resolution with tabling in XSB Prolog~\cite{swift2012xsb}. Simultaneously, System-2A computes stable models in Answer Set Programming (ASP)~\cite{clingo}. Because Systems~2A and~2B operate strictly through exact symbolic fixpoint and stable model search, every edge in the synthesized attack graph represents a verified logical entailment. The concept of an ungrounded or hallucinated attack path is mathematically impossible within this symbolic layer.
 \end{itemize}
 
 % ------------------------------------------------------------------------------
@@ -1298,29 +1305,28 @@ Table~\ref{tab:pipeline_execution_timing} summarizes the timing performance, inv
 \textbf{Pipeline Stage} & \textbf{Target Predicate / Transformation} & \textbf{Duration (s)} & \textbf{Fact Yield} \\
 \midrule
 \multirow{7}{2.8cm}{\textbf{System-1 (LLMASP)}} 
-  & \texttt{located/3} & $3.04$ & 21 \\
-  & \texttt{networkService/5} & $3.61$ & 20 \\
-  & \texttt{hasAccount/3} & $3.28$ & 20 \\
-  & \texttt{aclNW/4} & $7.79$ & 10 \\
-  & \texttt{vulHost/5} & $21.21$ & 3 \\
-  & \texttt{l2Connection/5} & $8.69$ & 1 \\
-  & \texttt{dataFlow/4} & $3.54$ & 1 \\
+  & \texttt{located/3} & $2.07$ & 21 \\
+  & \texttt{networkService/5} & $3.39$ & 20 \\
+  & \texttt{hasAccount/3} & $3.66$ & 20 \\
+  & \texttt{aclNW/4} & $9.46$ & 10 \\
+  & \texttt{vulHost/5} & $30.31$ & 3 \\
+  & \texttt{l2Connection/5} & $7.04$ & 1 \\
+  & \texttt{dataFlow/4} & $3.68$ & 1 \\
 \midrule
-\textbf{System-1 Subtotal} & \textbf{7 Invocations (Sequential Prompt Slicing)} & \textbf{$51.16$} & \textbf{76 facts} \\
+\textbf{System-1 Subtotal} & \textbf{7 Invocations (Sequential Prompt Slicing)} & \textbf{$59.61$} & \textbf{76 facts} \\
 \midrule
-\textbf{System-2A (\textsc{Clingo})} & Inductive Grounding \& Transitive Closure & \textbf{$0.0060$} & \textbf{14 derived} \\
+\textbf{System-2A (\textsc{Clingo})} & Inductive Grounding \& Transitive Closure & \textbf{$0.0087$} & \textbf{14 derived} \\
 \midrule
-\textbf{Total Ingestion} & Complete Knowledge Base Materialization & \textbf{$51.16$} & \textbf{90 facts} \\
+\textbf{Total Ingestion} & Complete Knowledge Base Materialization & \textbf{$59.61$} & \textbf{90 facts} \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 The empirical benchmarks demonstrate an asymmetrical division of execution latency, highlighting the complementary strengths of the neuro-symbolic architecture~\cite{alviano2025llmasp}:
 
-The neural extraction phase executed by System-1 required a cumulative wall-clock duration of $51.16$ seconds across seven scoped extraction calls. This duration is dominated by network round-trip time (RTT) and autoregressive token generation across remote API endpoints, with \texttt{vulHost/5} requiring $21.21$ seconds to evaluate consequence categories. Because targeted payload slicing reduced the prompt token payload by up to 65\%, System-1 achieved a 100\% syntactic parsing success rate: all 76 explicit configuration facts were extracted into valid Datalog atoms without schema errors or invalid variable casings.
+The neural extraction phase executed by System-1 required a cumulative wall-clock duration of $59.61$ seconds across seven scoped extraction calls. This duration is dominated by network round-trip time (RTT) and autoregressive token generation across remote API endpoints, with \texttt{vulHost/5} requiring $30.31$ seconds to evaluate consequence categories. Because targeted payload slicing reduced the prompt token payload by up to 65\%, System-1 achieved a 100\% syntactic parsing success rate: all 76 explicit configuration facts were extracted into valid Datalog atoms without schema errors or invalid variable casings.
 
-In sharp contrast, the symbolic completion phase executed by System-2A in Clingo completed in only \textbf{$0.0060$ seconds}. During this sub-second interval, Clingo grounded the non-monotonic background rules ($\mathcal{K}_{KB}$), performed all pairwise account comparisons across the 21 host entities ($O(\vert{}\mathcal{H}\vert{}^2)$ complexity), identified domain controller roles, and bound unauthenticated Modbus protocols to field controllers. This step expanded the fact base from 76 explicit atoms to 90 complete relational assertions under stable model semantics with absolute mathematical consistency.
-
+In sharp contrast, the symbolic completion phase executed by System-2A in Clingo completed in only \textbf{$0.0087$ seconds}. During this sub-second interval, Clingo grounded the non-monotonic background rules ($\mathcal{K}_{KB}$), performed all pairwise account comparisons across the 21 host entities ($O(|\mathcal{H}|^2)$ complexity), identified domain controller roles, and bound unauthenticated Modbus protocols to field controllers. This step expanded the fact base from 76 explicit atoms to 90 complete relational assertions under stable model semantics with absolute mathematical consistency.
 % ------------------------------------------------------------------------------
 \section{Quantitative Scenario Derivation Metrics}
 \label{sec:scenario_metrics}
@@ -1335,7 +1341,7 @@ The fully synthesized fact base \texttt{environmentNetwork.P} was evaluated acro
 \newcommand{\goaltt}[1]{{\ttfamily\raggedright\spaceskip=0.25em plus 0.25em\hyphenchar\font=`\-\relax #1}}
 \caption{MulVAL Attack Graph Derivation Metrics Across Evaluation Scenarios}
 \label{tab:benchmark_results}
-\begin{tabularx}{\textwidth}{>{\ttfamily\footnotesize}p{3.8cm} >{\raggedright\arraybackslash\footnotesize}X c c r r}
+\begin{tabularx}{\textwidth}{>{\ttfamily\footnotesize}p{4.2cm} >{\raggedright\arraybackslash\footnotesize}X c c r r}
 \toprule
 \textrm{\textbf{Scenario Identifier}} & \textrm{\textbf{Evaluation Attack Goal}} & \textbf{Status} & \textbf{Time (s)} & $|V|$ & $|E|$ \\
 \midrule
@@ -1374,7 +1380,7 @@ Figure~\ref{fig:graph_01} isolates the initial perimeter breach vector targeting
 \label{fig:graph_01}
 \end{figure}
 
-This subgraph establishes the mandatory initial foothold required for all subsequent lateral movement. The external attacker satisfies Rule~0 (Node~4) via the perimeter conduit at Node~5 (\texttt{aclNW(internet, jump\_server, tcp, 445)}), establishing transport access at Node~3. Exploiting CVE-2022-26809 (Node~8) on the active RPC service (Node~9) satisfies Rule~2 (Node~2), achieving the terminal goal \texttt{execCode(jump\_server, admin)} at Node~1. The graph demonstrates that eliminating the exposed SMB/RPC port at the external firewall isolates the plant perimeter and blocks all downstream compromise sequences.
+This subgraph establishes the mandatory initial foothold required for all subsequent lateral movement. The external attacker satisfies Rule~0 (Node~4) via the perimeter conduit at Node~5 \\(\texttt{aclNW(internet, jump\_server, tcp, 445)}), establishing transport access at Node~3. Exploiting CVE-2022-26809 (Node~8) on the active RPC service (Node~9) satisfies Rule~2 (Node~2), achieving the terminal goal \texttt{execCode(jump\_server, admin)} at Node~1. The graph demonstrates that eliminating the exposed SMB/RPC port at the external firewall isolates the plant perimeter and blocks all downstream compromise sequences.
 
 \subsection{Scenario 02: Lateral Movement via Administrative Credential Reuse}
 Figure~\ref{fig:graph_02} illustrates the multi-hop lateral propagation pathways enabled by administrative password sharing across the industrial plant.
@@ -1421,7 +1427,7 @@ Figures~\ref{fig:graph_04} and \ref{fig:graph_05} demonstrate the exploitation o
 \label{fig:graph_05}
 \end{figure}
 
-In Scenario~04, following the compromise of \texttt{jump\_server} (Node~5), the attacker utilizes the cross-zone firewall conduit at Node~4 (\texttt{aclNW(jump\_server, plc\_l1\_1, tcp, 502)}) to route traffic to the unauthenticated Modbus daemon at Node~3. Unification with Rule~5 (Node~2) derives \texttt{unauthorizedControl(plc\_l1\_1)} at Node~1, formalizing the attacker's ability to forge supervisory setpoints, override safety thresholds, or force controller stops. 
+In Scenario~04, following the compromise of \texttt{jump\_server} (Node~5), the attacker utilizes the cross-zone firewall conduit at Node~4 (\texttt{aclNW(jump\_server, plc\_l1\_1, tcp, 502)}) to route traffic to the unauthenticated Modbus daemon at Node~3. Unification with Rule~5 (Node~2) derives \\\texttt{unauthorizedControl(plc\_l1\_1)} at Node~1, formalizing the attacker's ability to forge supervisory setpoints, override safety thresholds, or force controller stops. 
 
 In Scenario~05, unauthorized process control at Node~3 unifies with Rule~6 (Node~2), deriving root-level execution privileges on the controller at Node~1 (\texttt{execCode(plc\_l1\_1, root)}).
 
@@ -1498,7 +1504,7 @@ Based on the root causal paths identified across Scenarios 01 through 06, we app
     \begin{equation}
         \mathcal{A}_{CL}' = \mathcal{A}_{CL} \setminus \{\text{aclNW}(\text{jump\_server}, \text{plc\_l1\_1}, \text{tcp}, 502)\}
     \end{equation}
-    \item \textbf{Mitigation B (Administrative Credential Segregation):} Enforced randomized, unique administrative passwords (simulating the implementation of Microsoft LAPS), eliminating \texttt{admin\_hash\_1969} reuse between \texttt{jump\_server}, \texttt{vdc01}, and \texttt{keba\_pda\_1}:
+    \item \textbf{Mitigation B (Administrative Credential Segregation):} Enforced randomized, unique administrative passwords (simulating the implementation of Microsoft LAPS), eliminating \\\texttt{admin\_hash\_1969} reuse between \texttt{jump\_server}, \texttt{vdc01}, and \texttt{keba\_pda\_1}:
     \begin{equation}
         \text{sameCredentials}' = \emptyset \quad (\text{for all DMZ-to-Internal pairs})
     \end{equation}
@@ -1581,7 +1587,7 @@ To provide rigorous academic continuity with the problem formulation established
 The empirical results confirm that five core research objectives were comprehensively achieved:
 \begin{enumerate}
     \item \textbf{Safe Out-of-Band Fact Extraction (Pillar 1 / Problem 1 \& 2):} The pipeline completely fulfilled the goal of extracting formal threat modeling primitives from raw industrial JSON manifests without generating live network traffic or active scanning probes~\cite{Ou05, alviano2025llmasp}. By combining targeted payload slicing with schema guardrails in System-1, the architecture achieved a 100\% syntactic parsing rate across 76 explicit configuration facts, resolving the token saturation and attentional degradation problems identified in Problem~2.
-    \item \textbf{Symbolic Relational Completion under Stable Models (Pillar 2 / Problem 3):} The integration of Clingo 5.x as System-2A resolved the quadratic combinatorial bottleneck ($O(|\mathcal{H}|^2)$) of cross-host credential matching. Clingo computed all pairwise administrative credential matches, classified Domain Controllers, and grounded fieldbus master-slave links in $0.0060$ seconds without generative hallucinations, fulfilling the declarative completion objective.
+    \item \textbf{Symbolic Relational Completion under Stable Models (Pillar 2 / Problem 3):} The integration of Clingo 5.x as System-2A resolved the quadratic combinatorial bottleneck ($O(|\mathcal{H}|^2)$) of cross-host credential matching. Clingo computed all pairwise administrative credential matches, classified Domain Controllers, and grounded fieldbus master-slave links in $0.0087$ seconds without generative hallucinations, fulfilling the declarative completion objective.
     \item \textbf{Domain-Specific Modeling of Exploitless Vulnerabilities (Pillar 3 / Problem 4):} The pipeline successfully formalized Class~II industrial weaknesses within MulVAL's Datalog framework. By implementing Rules 5 through 9 in \texttt{attack1.P}, the derivation engine mathematically proved how unauthenticated Modbus/TCP command injection and Layer-2 PROFINET drive actuation cascade directly from compromised supervisory jump hosts without software memory-corruption exploits~\cite{StanExtended, SunderOT}.
     \item \textbf{Guaranteed Termination and Execution Stability (Problem~5):} Enforcing SLG resolution with XSB Prolog tabling directives (\texttt{:- table execCode/2.}, \texttt{:- table netAccess/5.}) completely eliminated non-terminating loops caused by symmetric credential sharing and reciprocal firewall rules. Across all eight evaluated industrial threat scenarios on the 21-host architecture, derivation times remained highly stable and tightly bounded between 0.99 and 1.37 seconds. While an empirical proof of asymptotic polynomial scaling ($O(N^2)$) would require benchmarks across topologies of progressively increasing size, these measurements confirm that memoized tabled resolution prevents state-space explosion and guarantees predictable termination on realistic supervisory topologies~\cite{swift2012xsb}.
     \item \textbf{Counterfactual Hardening Verification (Pillar 4):} The pipeline demonstrated predictive verification capabilities, proving that computationally revoking two high-priority structural exposures (the DMZ-to-PLC maintenance conduit and shared administrative credentials) collapsed the derivation trees for 6 out of the 8 threat scenarios.
@@ -1590,7 +1596,7 @@ The empirical results confirm that five core research objectives were comprehens
 \subsection{Partially Fulfilled Objectives and Recommended Technical Approaches}
 Two research objectives were only partially fulfilled by the current pipeline implementation, highlighting specific areas where further work is required:
 \begin{enumerate}
-    \item \textbf{Cross-Vendor Ingestion Generalization:} While System-1 automated extraction from Danieli's \\ \texttt{configuration.json}, this mapping relied on tailored YAML schema extraction templates (\texttt{application\_ot.yaml}). The pipeline was not evaluated against differing industrial manifest formats, such as Siemens TIA Portal XML exports, AutomationML (IEC 62714) models, or Rockwell Automation inventories.
+    \item \textbf{Cross-Vendor Ingestion Generalization:} While System-1 automated extraction from Danieli's \\ \texttt{configuration.json}, this mapping relied on tailored YAML schema extraction templates \\(\texttt{application\_ot.yaml}). The pipeline was not evaluated against differing industrial manifest formats, such as Siemens TIA Portal XML exports, AutomationML (IEC 62714) models, or Rockwell Automation inventories.
     \item \textbf{Suggested Approach for Cross-Vendor Generalization:} Future research should integrate an ontology alignment layer using Asset Administration Shell (AAS) metamodels (IEC 63278) or AutomationML parsers prior to System-1 ingestion. Rather than manually authoring YAML extraction mappings for each vendor, an intermediate semantic normalization pass could map heterogeneous vendor exports into a standardized ontological schema, allowing a single unified prompt manifest to govern System-1 across diverse industrial ecosystems.
     \item \textbf{Automated Domain Rule Synthesis from Cyber Threat Intelligence:} While entity extraction from the JSON manifest was automated, the extended Datalog interaction ruleset (\texttt{attack1.P}) was manually authored to model Purdue boundaries and OT protocols. The pipeline does not currently synthesize new Datalog interaction rules dynamically from unstructured threat intelligence feeds or vendor advisory bulletins (e.g., CISA ICS advisories)~\cite{mitre_ics, StevanovicWachterRAISE}.
     \item \textbf{Suggested Approach for Automated Rule Synthesis:} To bridge this gap without introducing the severe path noise (83.9\%) observed in prior unconstrained studies~\cite{StevanovicWachterRAISE}, researchers should adopt a neuro-symbolic rule generation loop inspired by EntailLLM~\cite{MukherjiEntailLLM}. A language model can be prompted to extract candidate precondition-action-postcondition triples from CISA advisories, which are then passed to Clingo for compile-time arity, type, and semantic validation before being merged into MulVAL's active rule base~\cite{MukherjiEntailLLM}.
@@ -1605,7 +1611,7 @@ To delineate the analytical scope of this thesis and provide a foundation for su
 The current pipeline operates under the monotonic logic paradigm, modeling accumulated adversarial reachability and persistent privileges to prove structural path satisfiability~\cite{Ou05}. A valuable research direction involves extending the formal engine to account for dynamic, non-monotonic defensive interventions. Future work could integrate temporal logic models (e.g., LTL/CTL) or Markov Decision Processes (MDPs)~\cite{WachterSurvey} to model time-varying defensive responses, such as automated session timeouts, rate-limiting thresholds, dynamic firewall pinhole expirations, and reactive Intrusion Detection System (IDS) TCP connection resets. Coupling these dynamic state transitions with our declarative knowledge base would bridge the gap between static path discovery and real-time operational response planning.
 
 \subsubsection{Hardware-in-the-Loop and Physical Impact Validation}
-Our formal derivation of \texttt{physicalDriveControl(jump\_server, drive\_area\_1\_1)} mathematically proves that unauthenticated Layer-2 PROFINET paths connect compromised supervisory controllers directly to physical variable frequency drives. Because live manufacturing machinery cannot be subjected to destructive testing, this analysis remains strictly topological and logical. An impactful progression for subsequent studies would be to deploy this pipeline against dedicated Hardware-in-the-Loop (HIL) testbeds or high-fidelity digital twins. Researchers can empirically measure whether forged PROFINET control frames successfully bypass hardware-level safety relays, local emergency stops, and physical interlocks, thereby quantifying the kinetic and mechanical consequences of derived attack trajectories under safe, isolated conditions.
+Our formal derivation of \texttt{physicalDriveControl(jump\_server, drive\_area\_1\_1)} mathematically pro-\\ves that unauthenticated Layer-2 PROFINET paths connect compromised supervisory controllers directly to physical variable frequency drives. Because live manufacturing machinery cannot be subjected to destructive testing, this analysis remains strictly topological and logical. An impactful progression for subsequent studies would be to deploy this pipeline against dedicated Hardware-in-the-Loop (HIL) testbeds or high-fidelity digital twins. Researchers can empirically measure whether forged PROFINET control frames successfully bypass hardware-level safety relays, local emergency stops, and physical interlocks, thereby quantifying the kinetic and mechanical consequences of derived attack trajectories under safe, isolated conditions.
 
 \subsubsection{Automated Zero-Day and Latent Vulnerability Discovery}
 The dual-class vulnerability engine is designed to assess known software flaws (Class~I CVEs) and architectural protocol exposures (Class~II exploitless vectors) declared within input manifests. A promising technical enhancement lies in combining the pipeline with dynamic fuzzing engines or symbolic binary execution tools. By ingesting discovered zero-day vulnerabilities and newly surfaced protocol anomalies directly into the System-1 extraction layer, researchers can evaluate how previously uncataloged vulnerabilities alter multi-stage lateral reachability across the Purdue hierarchy in an automated, closed-loop framework.
@@ -1617,7 +1623,7 @@ The dual-class vulnerability engine is designed to assess known software flaws (
 
 The experimental evaluation confirms three overarching findings regarding automated industrial threat modeling:
 First, the neuro-symbolic pipeline generated mathematically verified, zero-hallucination attack graphs across all eight targeted threat scenarios on the Danieli plant topology without missing intermediate lateral hops or failing arity constraints~\cite{alviano2025llmasp}.
-Second, the symbolic completion layer proved computationally scalable: Clingo executed background knowledge completion across quadratic credential relationships in $0.0060$ seconds, while MulVAL compiled complete multi-stage attack graphs in an average of $1.12$ seconds per scenario~\cite{clingo, swift2012xsb}.
+Second, the symbolic completion layer proved computationally scalable: Clingo executed background knowledge completion across quadratic credential relationships in $0.0087$ seconds, while MulVAL compiled complete multi-stage attack graphs in an average of $1.12$ seconds per scenario~\cite{clingo, swift2012xsb}.
 Finally, counterfactual verification confirmed that applying targeted architectural mitigations (blocking direct port 502 DMZ-to-PLC access and enforcing administrative credential segregation) broke the logical derivation trees for six out of the eight threat scenarios, demonstrating that formal declarative logic synthesis provides a practical, zero-risk methodology for industrial security hardening prior to physical plant commissioning~\cite{SunderOT}.
 
 % ==============================================================================
@@ -1665,7 +1671,7 @@ By prioritizing explainability, formal soundness, and proactive defense-in-depth
 This thesis presented an end-to-end, neuro-symbolic framework for automated cyber-physical risk assessment in industrial Operational Technology (OT) environments, evaluated against the reference architecture of a Danieli automation plant. Industrial control networks present unique verification challenges due to their hybrid architectures, governed by the Purdue Enterprise Reference Architecture, where IT enterprise infrastructure directly converges with deterministic fieldbus protocols, programmable logic controllers (PLCs), and physical actuators. 
 Traditional threat modeling methodologies in OT rely heavily on manual approaches and static vulnerability scanning, both of which struggle to capture the complex, multi-stage causality spanning logical perimeter breaches down to Layer~0 physical actuation.
 
-To address these limitations, our approach decoupled network threat modeling into a structured, three-tier neuro-symbolic pipeline. In the first stage, the neural extraction phase (System-1 via LLMASP) decomposed the ingestion task across seven discrete, prompt-sliced predicate definitions. An open Large Language Model extracted explicit topological primitives, firewall rules, credentials, software CVEs, and data flows directly from unstructured configuration inputs in $51.16$ seconds without structural hallucination. Subsequently, the symbolic completion stage (System-2A via \textsc{Clingo}) grounded background domain constraints in $0.0060$ seconds, computing transitive equivalence closures over shared credentials and fieldbus topologies to yield 90 ground Datalog facts without generative drift. In the final stage, formal attack graph synthesis (System-2B via MulVAL and XSB Prolog) executed domain-adapted industrial interaction rules using SLG resolution to synthesize sound, causal attack graphs.
+To address these limitations, our approach decoupled network threat modeling into a structured, three-tier neuro-symbolic pipeline. In the first stage, the neural extraction phase (System-1 via LLMASP) decomposed the ingestion task across seven discrete, prompt-sliced predicate definitions. An open Large Language Model extracted explicit topological primitives, firewall rules, credentials, software CVEs, and data flows directly from unstructured configuration inputs in $59.61$ seconds without structural hallucination. Subsequently, the symbolic completion stage (System-2A via \textsc{Clingo}) grounded background domain constraints in $0.0087$ seconds, computing transitive equivalence closures over shared credentials and fieldbus topologies to yield 90 ground Datalog facts without generative drift. In the final stage, formal attack graph synthesis (System-2B via MulVAL and XSB Prolog) executed domain-adapted industrial interaction rules using SLG resolution to synthesize sound, causal attack graphs.
 
 The empirical evaluation across eight distinct operational attack scenarios, spanning initial DMZ ingress, transitive domain controller compromise, unauthenticated Modbus/TCP command injection, OPC UA denial-of-service, and telemetry falsification on the Level-2 historian, achieved 100\% derivation coverage. Derivation latencies remained under $1.4$ seconds per scenario, confirming that formal, causal safety guarantees can be derived deterministically from automated network extractions. The resulting pipeline was fully containerized and instrumented with deterministic replay mechanisms to guarantee academic reproducibility.
 
@@ -1875,7 +1881,7 @@ isSlave(D, bus_area_1) :-
     located(D, fieldbus_l0, _).
 \end{lstlisting}
 
-\section{Materialized Datalog Knowledge Base Sample (\texttt{environmentNetwork.P})}
+\section{Materialized Datalog Knowledge Base Sample \\(\texttt{environmentNetwork.P})}
 \begin{lstlisting}[language=Prolog, caption={Materialized Fact Base Excerpt (\texttt{environmentNetwork.P})}]
 % Static Ingress Axioms
 attackerLocated(internet).
@@ -2098,6 +2104,16 @@ FireEye / Mandiant Intelligence, Tech. Rep., 2017.
 A.~Y.~Zhang et al.,
 ``Cybench: A Framework for Evaluating Cybersecurity Capabilities and Risk,''
 \emph{arXiv preprint arXiv:2408.08926}, 2024.
+
+\bibitem{cimatti2002nusmv}
+A.~Cimatti, E.~Clarke, E.~Giunchiglia, F.~Giunchiglia, M.~Pistore, M.~Roveri, R.~Sebastiani, and A.~Tacchella,
+``NuSMV 2: An OpenSource Tool for Symbolic Model Checking,''
+in \emph{Computer Aided Verification (CAV 2002)}, ser. Lecture Notes in Computer Science, vol.~2404, Springer, Berlin, Heidelberg, pp.~359--364, 2002.
+
+\bibitem{holzmann1997model}
+G.~J.~Holzmann,
+``The Model Checker SPIN,''
+\emph{IEEE Transactions on Software Engineering}, vol.~23, no.~5, pp.~279--295, 1997.
 
 \bibitem{gurabi2026playbooks}
 M.~A.~Gurabi, {\"O}.~Sen, R.~Ahmadieyeh, T.~Agir, R.~Mazutt, A.~Ulbig, and S.~Decker,
