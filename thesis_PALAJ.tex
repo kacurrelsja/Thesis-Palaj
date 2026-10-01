@@ -904,7 +904,7 @@ isSlave(D, bus_area_1) :-
     located(D, fieldbus_l0, _).
 \end{lstlisting}
 
-By executing this logic declaratively, Clingo evaluates all pairwise credential matches, classifies Domain Controllers, and formalizes unauthenticated protocol bindings in approximately $0.0087$ seconds with formal soundness. This step eliminates manual pairing overhead while preventing generative hallucinations. The resulting stable model is then combined with static axioms to materialize the closed Datalog knowledge base, saved as \texttt{environmentNetwork.P}.
+By executing this logic declaratively, Clingo evaluates all pairwise credential matches, classifies Domain Controllers, and formalizes unauthenticated protocol bindings in approximately $0.0060$ seconds with formal soundness. This step eliminates manual pairing overhead while preventing generative hallucinations. The resulting stable model is then combined with static axioms to materialize the closed Datalog knowledge base, saved as \texttt{environmentNetwork.P}.
 
 \subsection{Step 4: Monotonic Derivation with MulVAL and Tabled XSB}
 In the third phase, the materialized fact base is ingested by the MulVAL reasoning engine (System-2B), executed on an underlying XSB Prolog environment. 
@@ -1118,7 +1118,7 @@ This declarative step serves three specific functions:
     \item Equation (5.4) identifies which hosts run Active Directory services and marks them as Domain Controllers, formalizing their role for domain-takeover rules.
     \item Equations (5.5) through (5.7) inspect active services and subnet locations to bind unauthenticated Modbus protocols to controllers and establish master-slave relationships over Layer-2 fieldbuses.
 \end{itemize}
-Clingo evaluates these rules in approximately $0.0087$ seconds, ensuring that all relational links are derived quickly and without hallucinations~\cite{clingo}. The resulting stable model is then combined with static axioms to produce the closed fact base: \texttt{environmentNetwork.P}.
+Clingo evaluates these rules in approximately $0.0060$ seconds, ensuring that all relational links are derived quickly and without hallucinations~\cite{clingo}. The resulting stable model is then combined with static axioms to produce the closed fact base: \texttt{environmentNetwork.P}.
 
 \subsection{Vulnerability Modeling Mechanics: Static 5-Tuples vs. Dynamic NVD Ingestion}
 In our framework, vulnerability data enters the pipeline as pre-classified 5-tuples:
@@ -1291,7 +1291,7 @@ Mathematically, this corresponds to the least fixpoint under forward-chaining ap
 \label{sec:performance_benchmarks}
 % ------------------------------------------------------------------------------
 
-Execution latencies were benchmarked across each individual phase of the neuro-symbolic pipeline. System-1 neural extraction was evaluated over high-throughput RESTful endpoints using open-source Large Language Models (OpenAI GPT-OSS) accessed via the Groq inference acceleration engine. System-2A ASP completion was executed locally using \textsc{Clingo} 5.7.0, and System-2B derivation was evaluated using MulVAL 1.4 on an XSB 5.0 Prolog engine~\cite{Ou05, clingo, swift2012xsb}.
+Execution latencies were benchmarked across each individual phase of the neuro-symbolic pipeline. System-1 neural extraction was evaluated over high-throughput RESTful endpoints using open-source Large Language Models (OpenAI GPT-OSS) accessed via the Groq inference acceleration engine. System-2A ASP completion was executed locally using \textsc{Clingo} 5.7.0, and System-2B derivation was evaluated using MulVAL 1.4 on an XSB 5.0 Prolog engine~\cite{Ou05, clingo, swift2012xsb}. All durations reported in this chapter are wall-clock measurements of a single reference run and are indicative only: they depend on the host machine and, for System-1, on remote API latency. Fact counts and attack graph sizes are instead deterministic for a given extraction, and the committed System-1 extraction can be replayed offline to reproduce them.
 
 Table~\ref{tab:pipeline_execution_timing} summarizes the timing performance, invocation frequency, and fact yields recorded across the neural extraction and declarative ASP completion phases.
 
@@ -1305,28 +1305,28 @@ Table~\ref{tab:pipeline_execution_timing} summarizes the timing performance, inv
 \textbf{Pipeline Stage} & \textbf{Target Predicate / Transformation} & \textbf{Duration (s)} & \textbf{Fact Yield} \\
 \midrule
 \multirow{7}{2.8cm}{\textbf{System-1 (LLMASP)}} 
-  & \texttt{located/3} & $2.07$ & 21 \\
-  & \texttt{networkService/5} & $3.39$ & 20 \\
-  & \texttt{hasAccount/3} & $3.66$ & 20 \\
-  & \texttt{aclNW/4} & $9.46$ & 10 \\
-  & \texttt{vulHost/5} & $30.31$ & 3 \\
-  & \texttt{l2Connection/5} & $7.04$ & 1 \\
-  & \texttt{dataFlow/4} & $3.68$ & 1 \\
+  & \texttt{located/3} & $3.04$ & 21 \\
+  & \texttt{networkService/5} & $3.61$ & 21 \\
+  & \texttt{hasAccount/3} & $3.28$ & 20 \\
+  & \texttt{aclNW/4} & $7.79$ & 10 \\
+  & \texttt{vulHost/5} & $21.21$ & 3 \\
+  & \texttt{l2Connection/5} & $8.69$ & 1 \\
+  & \texttt{dataFlow/4} & $3.54$ & 1 \\
 \midrule
-\textbf{System-1 Subtotal} & \textbf{7 Invocations (Sequential Prompt Slicing)} & \textbf{$59.61$} & \textbf{76 facts} \\
+\textbf{System-1 Subtotal} & \textbf{7 Invocations (Sequential Prompt Slicing)} & \textbf{$51.16$} & \textbf{77 facts} \\
 \midrule
-\textbf{System-2A (\textsc{Clingo})} & Inductive Grounding \& Transitive Closure & \textbf{$0.0087$} & \textbf{14 derived} \\
+\textbf{System-2A (\textsc{Clingo})} & Inductive Grounding \& Transitive Closure & \textbf{$0.0060$} & \textbf{15 derived} \\
 \midrule
-\textbf{Total Ingestion} & Complete Knowledge Base Materialization & \textbf{$59.61$} & \textbf{90 facts} \\
+\textbf{Total Ingestion} & Complete Knowledge Base Materialization & \textbf{$51.16$} & \textbf{92 facts} \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 The empirical benchmarks demonstrate an asymmetrical division of execution latency, highlighting the complementary strengths of the neuro-symbolic architecture~\cite{alviano2025llmasp}:
 
-The neural extraction phase executed by System-1 required a cumulative wall-clock duration of $59.61$ seconds across seven scoped extraction calls. This duration is dominated by network round-trip time (RTT) and autoregressive token generation across remote API endpoints, with \texttt{vulHost/5} requiring $30.31$ seconds to evaluate consequence categories. Because targeted payload slicing reduced the prompt token payload by up to 65\%, System-1 achieved a 100\% syntactic parsing success rate: all 76 explicit configuration facts were extracted into valid Datalog atoms without schema errors or invalid variable casings.
+The neural extraction phase executed by System-1 required a cumulative wall-clock duration of $51.16$ seconds across seven scoped extraction calls. This duration is dominated by network round-trip time (RTT) and autoregressive token generation across remote API endpoints, with \texttt{vulHost/5} requiring $21.21$ seconds to evaluate consequence categories. Because targeted payload slicing reduced the prompt token payload by up to 65\%, System-1 achieved a 100\% syntactic parsing success rate: all 77 explicit configuration facts were extracted into valid Datalog atoms without schema errors or invalid variable casings.
 
-In sharp contrast, the symbolic completion phase executed by System-2A in Clingo completed in only \textbf{$0.0087$ seconds}. During this sub-second interval, Clingo grounded the non-monotonic background rules ($\mathcal{K}_{KB}$), performed all pairwise account comparisons across the 21 host entities ($O(|\mathcal{H}|^2)$ complexity), identified domain controller roles, and bound unauthenticated Modbus protocols to field controllers. This step expanded the fact base from 76 explicit atoms to 90 complete relational assertions under stable model semantics with absolute mathematical consistency.
+In sharp contrast, the symbolic completion phase executed by System-2A in Clingo completed in only \textbf{$0.0060$ seconds}. During this sub-second interval, Clingo grounded the non-monotonic background rules ($\mathcal{K}_{KB}$), performed all pairwise account comparisons across the 21 host entities ($O(|\mathcal{H}|^2)$ complexity), identified domain controller roles, and bound unauthenticated Modbus protocols to field controllers. This step expanded the fact base from 77 explicit atoms to 92 complete relational assertions under stable model semantics with absolute mathematical consistency.
 % ------------------------------------------------------------------------------
 \section{Quantitative Scenario Derivation Metrics}
 \label{sec:scenario_metrics}
@@ -1586,8 +1586,8 @@ To provide rigorous academic continuity with the problem formulation established
 \subsection{Fulfilled Objectives and Validated Hypotheses}
 The empirical results confirm that five core research objectives were comprehensively achieved:
 \begin{enumerate}
-    \item \textbf{Safe Out-of-Band Fact Extraction (Pillar 1 / Problem 1 \& 2):} The pipeline completely fulfilled the goal of extracting formal threat modeling primitives from raw industrial JSON manifests without generating live network traffic or active scanning probes~\cite{Ou05, alviano2025llmasp}. By combining targeted payload slicing with schema guardrails in System-1, the architecture achieved a 100\% syntactic parsing rate across 76 explicit configuration facts, resolving the token saturation and attentional degradation problems identified in Problem~2.
-    \item \textbf{Symbolic Relational Completion under Stable Models (Pillar 2 / Problem 3):} The integration of Clingo 5.x as System-2A resolved the quadratic combinatorial bottleneck ($O(|\mathcal{H}|^2)$) of cross-host credential matching. Clingo computed all pairwise administrative credential matches, classified Domain Controllers, and grounded fieldbus master-slave links in $0.0087$ seconds without generative hallucinations, fulfilling the declarative completion objective.
+    \item \textbf{Safe Out-of-Band Fact Extraction (Pillar 1 / Problem 1 \& 2):} The pipeline completely fulfilled the goal of extracting formal threat modeling primitives from raw industrial JSON manifests without generating live network traffic or active scanning probes~\cite{Ou05, alviano2025llmasp}. By combining targeted payload slicing with schema guardrails in System-1, the architecture achieved a 100\% syntactic parsing rate across 77 explicit configuration facts, resolving the token saturation and attentional degradation problems identified in Problem~2.
+    \item \textbf{Symbolic Relational Completion under Stable Models (Pillar 2 / Problem 3):} The integration of Clingo 5.x as System-2A resolved the quadratic combinatorial bottleneck ($O(|\mathcal{H}|^2)$) of cross-host credential matching. Clingo computed all pairwise administrative credential matches, classified Domain Controllers, and grounded fieldbus master-slave links in $0.0060$ seconds without generative hallucinations, fulfilling the declarative completion objective.
     \item \textbf{Domain-Specific Modeling of Exploitless Vulnerabilities (Pillar 3 / Problem 4):} The pipeline successfully formalized Class~II industrial weaknesses within MulVAL's Datalog framework. By implementing Rules 5 through 9 in \texttt{attack1.P}, the derivation engine mathematically proved how unauthenticated Modbus/TCP command injection and Layer-2 PROFINET drive actuation cascade directly from compromised supervisory jump hosts without software memory-corruption exploits~\cite{StanExtended, SunderOT}.
     \item \textbf{Guaranteed Termination and Execution Stability (Problem~5):} Enforcing SLG resolution with XSB Prolog tabling directives (\texttt{:- table execCode/2.}, \texttt{:- table netAccess/5.}) completely eliminated non-terminating loops caused by symmetric credential sharing and reciprocal firewall rules. Across all eight evaluated industrial threat scenarios on the 21-host architecture, derivation times remained highly stable and tightly bounded between 0.99 and 1.37 seconds. While an empirical proof of asymptotic polynomial scaling ($O(N^2)$) would require benchmarks across topologies of progressively increasing size, these measurements confirm that memoized tabled resolution prevents state-space explosion and guarantees predictable termination on realistic supervisory topologies~\cite{swift2012xsb}.
     \item \textbf{Counterfactual Hardening Verification (Pillar 4):} The pipeline demonstrated predictive verification capabilities, proving that computationally revoking two high-priority structural exposures (the DMZ-to-PLC maintenance conduit and shared administrative credentials) collapsed the derivation trees for 6 out of the 8 threat scenarios.
@@ -1623,7 +1623,7 @@ The dual-class vulnerability engine is designed to assess known software flaws (
 
 The experimental evaluation confirms three overarching findings regarding automated industrial threat modeling:
 First, the neuro-symbolic pipeline generated mathematically verified, zero-hallucination attack graphs across all eight targeted threat scenarios on the Danieli plant topology without missing intermediate lateral hops or failing arity constraints~\cite{alviano2025llmasp}.
-Second, the symbolic completion layer proved computationally scalable: Clingo executed background knowledge completion across quadratic credential relationships in $0.0087$ seconds, while MulVAL compiled complete multi-stage attack graphs in an average of $1.12$ seconds per scenario~\cite{clingo, swift2012xsb}.
+Second, the symbolic completion layer proved computationally scalable: Clingo executed background knowledge completion across quadratic credential relationships in $0.0060$ seconds, while MulVAL compiled complete multi-stage attack graphs in an average of $1.12$ seconds per scenario~\cite{clingo, swift2012xsb}.
 Finally, counterfactual verification confirmed that applying targeted architectural mitigations (blocking direct port 502 DMZ-to-PLC access and enforcing administrative credential segregation) broke the logical derivation trees for six out of the eight threat scenarios, demonstrating that formal declarative logic synthesis provides a practical, zero-risk methodology for industrial security hardening prior to physical plant commissioning~\cite{SunderOT}.
 
 % ==============================================================================
@@ -1671,7 +1671,7 @@ By prioritizing explainability, formal soundness, and proactive defense-in-depth
 This thesis presented an end-to-end, neuro-symbolic framework for automated cyber-physical risk assessment in industrial Operational Technology (OT) environments, evaluated against the reference architecture of a Danieli automation plant. Industrial control networks present unique verification challenges due to their hybrid architectures, governed by the Purdue Enterprise Reference Architecture, where IT enterprise infrastructure directly converges with deterministic fieldbus protocols, programmable logic controllers (PLCs), and physical actuators. 
 Traditional threat modeling methodologies in OT rely heavily on manual approaches and static vulnerability scanning, both of which struggle to capture the complex, multi-stage causality spanning logical perimeter breaches down to Layer~0 physical actuation.
 
-To address these limitations, our approach decoupled network threat modeling into a structured, three-tier neuro-symbolic pipeline. In the first stage, the neural extraction phase (System-1 via LLMASP) decomposed the ingestion task across seven discrete, prompt-sliced predicate definitions. An open Large Language Model extracted explicit topological primitives, firewall rules, credentials, software CVEs, and data flows directly from unstructured configuration inputs in $59.61$ seconds without structural hallucination. Subsequently, the symbolic completion stage (System-2A via \textsc{Clingo}) grounded background domain constraints in $0.0087$ seconds, computing transitive equivalence closures over shared credentials and fieldbus topologies to yield 90 ground Datalog facts without generative drift. In the final stage, formal attack graph synthesis (System-2B via MulVAL and XSB Prolog) executed domain-adapted industrial interaction rules using SLG resolution to synthesize sound, causal attack graphs.
+To address these limitations, our approach decoupled network threat modeling into a structured, three-tier neuro-symbolic pipeline. In the first stage, the neural extraction phase (System-1 via LLMASP) decomposed the ingestion task across seven discrete, prompt-sliced predicate definitions. An open Large Language Model extracted explicit topological primitives, firewall rules, credentials, software CVEs, and data flows directly from unstructured configuration inputs in $51.16$ seconds without structural hallucination. Subsequently, the symbolic completion stage (System-2A via \textsc{Clingo}) grounded background domain constraints in $0.0060$ seconds, computing transitive equivalence closures over shared credentials and fieldbus topologies to yield 92 ground Datalog facts without generative drift. In the final stage, formal attack graph synthesis (System-2B via MulVAL and XSB Prolog) executed domain-adapted industrial interaction rules using SLG resolution to synthesize sound, causal attack graphs.
 
 The empirical evaluation across eight distinct operational attack scenarios, spanning initial DMZ ingress, transitive domain controller compromise, unauthenticated Modbus/TCP command injection, OPC UA denial-of-service, and telemetry falsification on the Level-2 historian, achieved 100\% derivation coverage. Derivation latencies remained under $1.4$ seconds per scenario, confirming that formal, causal safety guarantees can be derived deterministically from automated network extractions. The resulting pipeline was fully containerized and instrumented with deterministic replay mechanisms to guarantee academic reproducibility.
 
