@@ -1809,57 +1809,57 @@ interaction_rule(
 \end{lstlisting}
 
 \section{System-1 Extraction Configuration (\texttt{application\_ot.yaml})}
-\begin{lstlisting}[language=yaml, caption={Application Mapping Driver (\texttt{application\_ot.yaml})}]
+\begin{lstlisting}[language=yaml, caption={Application Mapping Driver, \texttt{preprocessing} section (excerpt of \texttt{application\_ot.yaml})}]
 preprocessing:
-  - "located(Host, Zone, ipSubnet)"
-  - "networkService(Host, Service, Protocol, Port, Privilege)"
-  - "hasAccount(Host, User, PasswordHash)"
-  - "aclNW(Source, Destination, Protocol, Port)"
-  - "vulHost(Host, CVE, Service, Vector, Consequence)"
-  - "l2Connection(Source, Destination, BusID, Protocol, bus)"
-  - "dataFlow(Source, Destination, FlowID, Type)"
+  _: |
+    Extract industrial network topology facts from the JSON configuration.
+    STRICT RULES:
+    1. Only lowercase letters, digits, and underscores.
+    2. Convert 'vjumpserver' to 'jump_server'.
+    3. Output valid Datalog facts ending with a period.
+    4. If a host has no services/CVEs, do NOT invent them.
 
-targets:
-  "located(Host, Zone, ipSubnet)":
-    source_array: "hosts"
-    template: "located({id}, {zone}, ipSubnet)."
-  "networkService(Host, Service, Protocol, Port, Privilege)":
-    source_array: "hosts[].software_services"
-    template: "networkService({host}, {name}, {protocol}, {port}, {privilege})."
-  "hasAccount(Host, User, PasswordHash)":
-    source_array: "hosts[].credentials"
-    template: "hasAccount({host}, {user}, {hash})."
-  "aclNW(Source, Destination, Protocol, Port)":
-    source_array: "firewall_rules"
-    template: "aclNW({source}, {destination}, {protocol}, {port})."
-  "vulHost(Host, CVE, Service, Vector, Consequence)":
-    source_array: "hosts[].software_services"
-    template: "vulHost({host}, {cve}, {name}, remoteExploit, privEscalation)."
-  "l2Connection(Source, Destination, BusID, Protocol, bus)":
-    source_array: "fieldbus_connections"
-    template: "l2Connection({source}, {destination}, {bus_id}, {protocol}, bus)."
-  "dataFlow(Source, Destination, FlowID, Type)":
-    source_array: "data_flows"
-    template: "dataFlow({source}, {destination}, {flow_id}, {type})."
+  located(host, zone, ipSubnet): |
+    Read the 'hosts' array. For each host, extract its 'id' and 'zone'.
+    Example: [OUTPUT]located(jump_server, ot_dmz, ipsubnet).[/OUTPUT]
+
+  networkService(host, service, protocol, port, privilege): |
+    Read 'software_services' inside each host in 'hosts'.
+    Example: [OUTPUT]networkService(jump_server, sshd, tcp, 22, admin).[/OUTPUT]
+
+  hasAccount(host, username, password_key): |
+    Read 'credentials' inside each host in 'hosts'.
+    Example: [OUTPUT]hasAccount(jump_server, admin, automation_pass_1969).[/OUTPUT]
+
+  aclNW(source, destination, protocol, port): |
+    Read 'firewall_rules'. For each rule extract source, destination, protocol, and port.
+    Example: [OUTPUT]aclNW(internet, jump_server, tcp, 445).[/OUTPUT]
+
+  # vulHost/5, l2Connection/5 and dataFlow/4 follow the same pattern.
 \end{lstlisting}
 
 \section{System-1 Behavioral Prompt Driver (\texttt{behavior\_ot.yaml})}
-\begin{lstlisting}[language=yaml, caption={Behavioral Prompt Driver (\texttt{behavior\_ot.yaml})}]
-init: |
-  You are a deterministic syntactic parsing interface translating industrial asset inventories into Datalog ground atoms.
-  Output ONLY the extracted facts enclosed within [OUTPUT] and [/OUTPUT] tags.
-  Do not explain, converse, or add markdown prose.
-  If a relation cannot be definitively identified from the payload, output: [OUTPUT]NONE[/OUTPUT].
+\begin{lstlisting}[language=yaml, caption={Behavioral Prompt Driver, \texttt{preprocessing} section (excerpt of \texttt{behavior\_ot.yaml})}]
+preprocessing:
+  init: |
+    You are an automated, highly precise Natural Language and JSON to Datalog fact extractor.
+    Your task is to parse semi-structured configuration inputs and convert them into formal logic predicates for the MulVAL reasoning engine.
+    You must output ONLY valid Datalog facts matching the exact template: [OUTPUT]predicate(terms).[/OUTPUT].
+    Do NOT output conversational filler, markdown formatting wrappers (e.g., ```prolog), or explanatory text.
 
-mapping: |
-  Target predicate schema: {2}
-  Configuration JSON payload slice:
-  {0}
-  Extract all valid instances of the target predicate adhering to the template: {1}
-  Rules:
-  - All identifiers must be converted to lowercase alphanumeric characters with underscores.
-  - Never use uppercase letters for entities or zone names.
-  - Wrap output strictly in [OUTPUT] and [/OUTPUT].
+  context: |
+    Here is the domain context and strict formatting rules you MUST follow:
+    {context}
+
+  mapping: |
+    [INPUT]
+    {input}
+    [/INPUT]
+    Process the INPUT strictly according to these instructions:
+    {instructions}
+    Expected output atom schema:
+    [OUTPUT]{atom}[/OUTPUT]
+    If the requested relation is not present in the INPUT, you MUST reply strictly: NONE
 \end{lstlisting}
 
 \section{System-2A Declarative Completion Logic (\texttt{knowledge\_base})}
@@ -1897,40 +1897,44 @@ attackerLocated(internet).
 malicious(internet).
 
 % Zone Topology Primitives
-located(jump_server, ot_dmz, ipSubnet).
-located(vdc01, danieli_domain, ipSubnet).
-located(vbackup, danieli_domain, ipSubnet).
-located(plc_l1_1, level_1_network, ipSubnet).
-located(drive_area_1_1, fieldbus_l0, l2Bus).
+located(jump_server,ot_dmz,ipsubnet).
+located(vdc01,danieli_domain,ipsubnet).
+located(vbackup,danieli_domain,ipsubnet).
+located(plc_l1_1,level_1_network,ipsubnet).
+located(drive_area_1_1,fieldbus_l0,ipsubnet).
 
 % Listening Network Services
-networkService(jump_server, rpc_service, tcp, 445, admin).
-networkService(vdc01, active_directory, tcp, 389, admin).
-networkService(vbackup, backup_service, tcp, 445, admin).
-networkService(plc_l1_1, modbus_service, tcp, 502, root).
-networkService(plc_l1_1, opcua_server, tcp, 4840, root).
+networkService(jump_server,rpc_service,tcp,445,admin).
+networkService(vdc01,active_directory,tcp,389,admin).
+networkService(vbackup,backup_service,tcp,445,admin).
+networkService(plc_l1_1,modbus_service,tcp,502,root).
+networkService(plc_l1_1,opcua_server,tcp,4840,root).
 
 % Firewall Conduits (ACLs)
-aclNW(internet, jump_server, tcp, 445).
-aclNW(jump_server, vdc01, tcp, 389).
-aclNW(jump_server, vbackup, tcp, 445).
-aclNW(jump_server, plc_l1_1, tcp, 502).
-aclNW(jump_server, plc_l1_1, tcp, 4840).
+aclNW(internet,jump_server,tcp,445).
+aclNW(jump_server,vdc01,tcp,389).
+aclNW(jump_server,vbackup,tcp,445).
+aclNW(jump_server,plc_l1_1,tcp,502).
+aclNW(jump_server,plc_l1_1,tcp,4840).
 
 % Vulnerability Annotations (Class I CVEs)
-vulHost(jump_server, cve_2022_26809, rpc_service, remoteExploit, privEscalation).
-vulHost(plc_l1_1, cve_2022_25888, opcua_server, remoteExploit, dos).
+vulHost(jump_server,cve_2022_26809,rpc_service,remoteexploit,privescalation).
+vulHost(plc_l1_1,cve_2022_25888,opcua_server,remoteexploit,dos).
+
+% Fieldbus and Telemetry Primitives
+l2Connection(jump_server,drive_area_1_1,bus_area_1,profinet,bus).
+dataFlow(keba_pda_1,iba_hd,flow_pda_hd,twoway).
 
 % Declaratively Derived Atoms via Clingo (System-2A)
-sameCredentials(jump_server, vdc01).
-sameCredentials(vdc01, jump_server).
-sameCredentials(vdc01, vbackup).
-sameCredentials(vbackup, vdc01).
-isDomainController(vdc01, danieli_domain).
-vulLinkProtocol(plc_l1_1, vul_modbus_no_auth, modbus, adjacent, impersonateDst).
-isMaster(plc_l1_1, bus_area_1).
-isSlave(drive_area_1_1, bus_area_1).
-l2Connection(jump_server, drive_area_1_1, bus_area_1, profinet, bus).
+sameCredentials(jump_server,vdc01).
+sameCredentials(vdc01,jump_server).
+sameCredentials(vdc01,vbackup).
+sameCredentials(vbackup,vdc01).
+isDomainController(vdc01,danieli_domain).
+vulLinkProtocol(plc_l1_1,vul_modbus_no_auth,modbus,adjacent,impersonateDst).
+isMaster(plc_l1_1,bus_area_1).
+isSlave(drive_area_1_1,bus_area_1).
+flowBind(flow_pda_hd,tcp,9099).
 \end{lstlisting}
 
 %% Parte conclusiva del documento; tipicamente per riassunto, bibliografia e/o indice analitico.
