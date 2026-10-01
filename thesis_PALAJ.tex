@@ -498,7 +498,7 @@ This extended rule allows the engine to mathematically prove how a compromised e
 Plant engineers frequently configure identical administrative credentials across jump servers, domain controllers, and auxiliary workstations to simplify site maintenance. The reasoning engine processes firewall permissions alongside custom crosstalk and credential reuse rules to evaluate lateral movement vectors:
 \begin{lstlisting}[language=Prolog]
 interaction_rule(
-  (execCode(TargetHost, admin) :- 
+  (execCode(TargetHost, admin) :-
     execCode(CompromisedHost, admin),
     sameCredentials(CompromisedHost, TargetHost)),
   rule_desc('Lateral movement across zones via shared administrative credentials', 1.0)
@@ -886,22 +886,25 @@ After explicit facts are parsed, the system must derive the implicit architectur
 
 Rather than relying on neural inference for relational completion, this step is offloaded to an Answer Set Programming solver, specifically Clingo~5.x (System-2A). Operating under the Closed World Assumption with stable model semantics, Clingo processes declarative background knowledge rules ($\mathcal{K}_{KB}$):
 \begin{lstlisting}[language=Prolog]
-sameCredentials(H1, H2) :- 
+sameCredentials(H1, H2) :-
     hasAccount(H1, U, P), 
     hasAccount(H2, U, P), 
     H1 != H2.
 
-isDomainController(H, danieli_domain) :- 
+isDomainController(H, danieli_domain) :-
     networkService(H, active_directory, _, _, _).
 
-vulLinkProtocol(H, vul_modbus_no_auth, modbus, adjacent, impersonateDst) :- 
-    networkService(H, modbus_service, _, _, _).
-
-isMaster(H, bus_area_1) :- 
+vulLinkProtocol(H, vul_modbus_no_auth, modbus, adjacent, impersonateDst) :-
     networkService(H, modbus_service, tcp, 502, _).
 
-isSlave(D, bus_area_1) :- 
-    located(D, fieldbus_l0, _).
+isMaster(H, bus_area_1) :-
+    networkService(H, modbus_service, tcp, 502, _).
+
+isSlave(D, Bus) :-
+    l2Connection(_, D, Bus, profinet, _).
+
+flowBind(FlowID, tcp, 9099) :-
+    dataFlow(_, iba_hd, FlowID, _).
 \end{lstlisting}
 
 By executing this logic declaratively, Clingo evaluates all pairwise credential matches, classifies Domain Controllers, and formalizes unauthenticated protocol bindings in approximately $0.0060$ seconds with formal soundness. This step eliminates manual pairing overhead while preventing generative hallucinations. The resulting stable model is then combined with static axioms to materialize the closed Datalog knowledge base, saved as \texttt{environmentNetwork.P}.
@@ -978,7 +981,7 @@ The practical toolchain coordinates three distinct computational environments, t
 \begin{itemize}
     \item \textbf{System-1 Orchestrator (\texttt{run\_llmasp.py}):} A Python-based automation controller that interfaces with the Groq inference endpoint, ingests \texttt{configuration.json}, and enforces prompt-sliced querying according to \texttt{behavior\_ot.yaml} and \texttt{application\_ot.yaml}.
     \item \textbf{Syntactic Normalization and Sanitization Module:} Embedded within the controller, this component filters raw LLM emissions, strips markdown delimiters, standardizes variable casing, and verifies predicate arities before fact instantiation.
-    \item \textbf{System-2A Deductive Engine (\texttt{clingo}):} Evaluates declarative background knowledge rules (\texttt{background\_ot.lp}) against explicit primitives to materialize implicit architectural relations into \texttt{environmentNetwork.P}.
+    \item \textbf{System-2A Deductive Engine (\texttt{clingo}):} Evaluates declarative background knowledge rules (the \texttt{knowledge\_base} block of \texttt{application\_ot.yaml}) against explicit primitives to materialize implicit architectural relations into \texttt{environmentNetwork.P}.
     \item \textbf{System-2B Causal Derivation Engine (\texttt{mulval}):} Executes goal-directed SLG resolution in XSB Prolog, applying our extended industrial ruleset (\texttt{attack1.P}) to compile \\\texttt{environmentNetwork.P} into directed Graphviz (\texttt{.dot}) structures and visual attack graphs (\texttt{.pdf}, \texttt{.png}).
 \end{itemize}
 
@@ -1102,21 +1105,23 @@ A key design choice of our methodology is offloading relational deduction and en
 As identified in Chapter~\ref{chap:analysis}, checking administrative credential sharing across a network requires pairwise comparisons over all host accounts, scaling quadratically as $O(\vert{}\mathcal{H}\vert{}^2)$. Asking a language model to find every matching pair across 21 machines often results in missed connections and hallucinated links. In our pipeline, the model extracts only the basic account facts (\texttt{hasAccount/3}). Deducing shared credentials is then handled symbolically by Clingo~5.x using background knowledge rules $\mathcal{K}_{KB}$ under stable model semantics:
 
 \begin{align}
-    \text{sameCredentials}(H_1, H_2) &\leftarrow \text{hasAccount}(H_1, U, P) \land \text{hasAccount}(H_2, U, P) \land H_1 \neq H_2 \\
-    \text{isDomainController}(H, \text{danieli\_domain}) &\leftarrow \text{networkService}(H, \text{active\_directory}, \_, \_, \_) \\
+    \text{sameCredentials}(H_1, H_2) &\leftarrow \text{hasAccount}(H_1, U, P) \land \text{hasAccount}(H_2, U, P) \land H_1 \neq H_2 \label{eq:kb_samecred} \\
+    \text{isDomainController}(H, \text{danieli\_domain}) &\leftarrow \text{networkService}(H, \text{active\_directory}, \_, \_, \_) \label{eq:kb_dc} \\
     \text{vulLinkProtocol}(H, \text{vul\_modbus\_no\_auth}, &\text{modbus}, \text{adjacent}, \text{impersonateDst}) \leftarrow \nonumber \\
-    &\quad \text{networkService}(H, \text{modbus\_service}, \text{tcp}, 502, \_) \\
+    &\quad \text{networkService}(H, \text{modbus\_service}, \text{tcp}, 502, \_) \label{eq:kb_vullink} \\
     \text{isMaster}(H, \text{bus\_area\_1}) &\leftarrow \text{networkService}(H, \text{modbus\_service}, \text{tcp}, 502, \_) \\
-    \text{isSlave}(D, \text{bus\_area\_1}) &\leftarrow \text{located}(D, \text{fieldbus\_l0}, \_)
+    \text{isSlave}(D, \mathit{Bus}) &\leftarrow \text{l2Connection}(\_, D, \mathit{Bus}, \text{profinet}, \_) \label{eq:kb_slave} \\
+    \text{flowBind}(F, \text{tcp}, 9099) &\leftarrow \text{dataFlow}(\_, \text{iba\_hd}, F, \_) \label{eq:kb_flowbind}
 \end{align}
 
 Regarding the provenance of these extended Purdue rules, they were constructed using a \textbf{hybrid human-in-the-loop methodology}: the architectural structures and protocol behaviors were conceptually derived from foundational industrial cybersecurity guidelines (such as the Purdue Model and Danieli plant specifications), and subsequently formalized and validated manually as Datalog rules.
 
-This declarative step serves three specific functions:
+This declarative step serves four specific functions:
 \begin{itemize}
-    \item Equation (5.3) calculates the symmetric transitive closure of credential sharing across all hosts. It identifies when different machines share administrative password hashes without requiring the language model to perform pairwise comparisons.
-    \item Equation (5.4) identifies which hosts run Active Directory services and marks them as Domain Controllers, formalizing their role for domain-takeover rules.
-    \item Equations (5.5) through (5.7) inspect active services and subnet locations to bind unauthenticated Modbus protocols to controllers and establish master-slave relationships over Layer-2 fieldbuses.
+    \item Equation~\eqref{eq:kb_samecred} calculates the symmetric transitive closure of credential sharing across all hosts. It identifies when different machines share administrative password hashes without requiring the language model to perform pairwise comparisons.
+    \item Equation~\eqref{eq:kb_dc} identifies which hosts run Active Directory services and marks them as Domain Controllers, formalizing their role for domain-takeover rules.
+    \item Equations~\eqref{eq:kb_vullink} through~\eqref{eq:kb_slave} inspect active services and Layer-2 fieldbus links to bind unauthenticated Modbus protocols to controllers and establish master-slave relationships over Layer-2 fieldbuses.
+    \item Equation~\eqref{eq:kb_flowbind} binds the telemetry flow directed to the process historian (\texttt{iba\_hd}) to its listening port, which is required by the historian tampering rule (Scenario~08).
 \end{itemize}
 Clingo evaluates these rules in approximately $0.0060$ seconds, ensuring that all relational links are derived quickly and without hallucinations~\cite{clingo}. The resulting stable model is then combined with static axioms to produce the closed fact base: \texttt{environmentNetwork.P}.
 
@@ -1857,28 +1862,32 @@ mapping: |
   - Wrap output strictly in [OUTPUT] and [/OUTPUT].
 \end{lstlisting}
 
-\section{System-2A Declarative Completion Logic (\texttt{background\_ot.lp})}
-\begin{lstlisting}[language=Prolog, caption={ASP Completion Rules in Clingo (\texttt{background\_ot.lp})}]
+\section{System-2A Declarative Completion Logic (\texttt{knowledge\_base})}
+\begin{lstlisting}[language=Prolog, caption={ASP Completion Rules in Clingo (\texttt{knowledge\_base} block of \texttt{application\_ot.yaml})}]
 % Relational Completion for Credential Reuse
-sameCredentials(H1, H2) :- 
-    hasAccount(H1, U, P), 
-    hasAccount(H2, U, P), 
+sameCredentials(H1, H2) :-
+    hasAccount(H1, U, P),
+    hasAccount(H2, U, P),
     H1 != H2.
 
 % Operational Classification of Domain Controllers
-isDomainController(H, danieli_domain) :- 
+isDomainController(H, danieli_domain) :-
     networkService(H, active_directory, _, _, _).
 
 % Exploitless Fieldbus Link Protocol Binding
-vulLinkProtocol(H, vul_modbus_no_auth, modbus, adjacent, impersonateDst) :- 
+vulLinkProtocol(H, vul_modbus_no_auth, modbus, adjacent, impersonateDst) :-
     networkService(H, modbus_service, tcp, 502, _).
 
 % Master-Slave Relations for Layer-2 PROFINET Fieldbus
-isMaster(H, bus_area_1) :- 
+isMaster(H, bus_area_1) :-
     networkService(H, modbus_service, tcp, 502, _).
 
-isSlave(D, bus_area_1) :- 
-    located(D, fieldbus_l0, _).
+isSlave(D, Bus) :-
+    l2Connection(_, D, Bus, profinet, _).
+
+% Telemetry Flow Binding for Historian Tampering (Scenario 08)
+flowBind(FlowID, tcp, 9099) :-
+    dataFlow(_, iba_hd, FlowID, _).
 \end{lstlisting}
 
 \section{Materialized Datalog Knowledge Base Sample \\(\texttt{environmentNetwork.P})}
